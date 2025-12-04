@@ -33,10 +33,14 @@ print(ans)
 ans = 0
 
 directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (-1, 1), (1, -1)]
-while True:
-    g_keys = list(g.keys())
+
+g_keys = set(g.keys())
+while g_keys:
     prev_ans = ans
+    new_g_keys = set()
     for k in g_keys:
+        if k not in g:
+            continue
         c = 0
         py = k[0]
         px = k[1]
@@ -45,9 +49,11 @@ while True:
                 c += 1
         if c < 4:
             del g[(py, px)]
+            for dy, dx in directions:
+                if (py + dy, px + dx) in g:
+                    new_g_keys.add((py + dy, px + dx))
             ans += 1
-    if prev_ans == ans:
-        break
+    g_keys = new_g_keys
 
 print(ans)
 # 3446 too low
