@@ -1,4 +1,3 @@
-from collections import deque
 from functools import cache
 
 f = open("i.txt").readlines()
@@ -6,26 +5,15 @@ f = open("i.txt").readlines()
 
 
 ans = 0
-min_x = 1e99
-min_y = 1e99
-max_x = 0
-max_y = 0
-
 
 points = []
-combos = []
 for i in range(len(f)):
     ax, ay = [int(x) for x in f[i].strip().split(",")]
     points.append((ax, ay))
     for j in range(i + 1, len(f)):
         bx, by = [int(x) for x in f[j].strip().split(",")]
-        combos.append([(ax, ay), (bx, by)])
         width = abs(bx - ax) + 1
         length = abs(by - ay) + 1
-        min_x = min(min_x, ax, bx)
-        min_y = min(min_y, ay, by)
-        max_x = max(max_x, ax, bx)
-        max_y = max(max_y, ay, by)
         ans = max(ans, width * length)
 print(ans)
 p1 = ans
@@ -34,7 +22,6 @@ g = dict()
 
 ans = 0
 
-greens = []
 
 previous = None
 start = [int(x) for x in f[0].strip().split(",")]
@@ -42,7 +29,6 @@ for i in range(len(f)):
     ax, ay = [int(x) for x in f[i].strip().split(",")]
     g[(ax, ay)] = 1
     if previous:
-        greens.append([(ax, ay), (previous[0], previous[1])])
         for greenyi in range(min(ay, previous[1]), max(previous[1], ay) + 1):
             for greenxi in range(min(ax, previous[0]), max(previous[0], ax) + 1):
                 if (greenxi, greenyi) in g:
@@ -53,13 +39,18 @@ for i in range(len(f)):
         ax,
         ay,
     )
-greens.append([(start[0], start[1]), (previous[0], previous[1])])
 for greenyi in range(min(start[1], previous[1]), max(previous[1], start[1]) + 1):
     for greenxi in range(min(start[0], previous[0]), max(previous[0], start[0]) + 1):
         if (greenxi, greenyi) in g:
             continue
         else:
             g[(greenxi, greenyi)] = 2
+
+edges = []
+
+for i in range(len(points)):
+    p1, p2 = points[i], points[(i + 1) % len(points)]
+    edges.append((min(p1[1], p2[1]), max(p1[1], p2[1]), max(p1[0], p2[0])))
 
 
 @cache
@@ -68,68 +59,32 @@ def even_odd_test(point):
         return True
     count = 0
     cx, cy = point
-    # print(new)
 
-    p1 = points[0]
-    for i in range(len(points) + 1):
-        p2 = points[i % len(points)]
-        y1 = min(p1[1], p2[1])
-        y2 = max(p1[1], p2[1])
-        x2 = max(p1[0], p2[0])
+    for y1, y2, x2 in edges:
         if y1 < cy <= y2:
             if cx < x2:
                 count += 1
-        p1 = p2
 
     return count % 2
 
 
-# NOT MY SOLUTION, taken from /u/Friiits to understand a better way
-
-sort = lambda l: [
-    ((min(a, c), min(b, d)), (max(a, c), max(b, d))) for (a, b), (c, d) in l
-]
-# print(sort(greens))
-# input()
-s_greens = sort(greens)
-
-ans = 0
-for (x, y), (u, v) in combos:
-    x1 = min(x, u)
-    y1 = min(y, v)
-    x2 = max(x, u)
-    y2 = max(y, v)
-    t = (x2 - x1 + 1) * (y2 - y1 + 1)
-    if t > ans:
-        for (p, q), (r, s) in s_greens:
-            gx1 = p
-            gx2 = r
-            gy1 = q
-            gy2 = s
-            # gx1 = min(p, r)
-            # gy1 = min(q, s)
-            # gx2 = max(p, r)
-            # gy2 = max(q, s)
-
-            if gx1 < x2 and gy1 < y2 and gx2 > x1 and gy2 > y1:
-                break
-        else:
-            ans = t
-print(ans)
-
-
 ans = 0
 
-for i in range(len(f)):
-    ax, ay = [int(x) for x in f[i].strip().split(",")]
-    for j in range(i + 1, len(f)):
-        bx, by = [int(x) for x in f[j].strip().split(",")]
+for i in range(len(points)):
+    ax, ay = points[i]
+    for j in range(i + 1, len(points)):
+        bx, by = points[j]
         fail = False
         width = abs(bx - ax) + 1
         length = abs(by - ay) + 1
         t = width * length
         if t <= ans:
             continue
+
+        corners = [(ax, ay), (ax, by), (bx, ay), (bx, by)]
+        if not all(even_odd_test(c) for c in corners):
+            continue
+
         for py in range(min(ay, by), max(ay, by) + 1):
             if not even_odd_test((ax, py)):
                 fail = True
