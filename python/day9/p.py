@@ -13,11 +13,13 @@ max_y = 0
 
 
 points = []
+combos = []
 for i in range(len(f)):
     ax, ay = [int(x) for x in f[i].strip().split(",")]
     points.append((ax, ay))
     for j in range(i + 1, len(f)):
         bx, by = [int(x) for x in f[j].strip().split(",")]
+        combos.append([(ax, ay), (bx, by)])
         width = abs(bx - ax) + 1
         length = abs(by - ay) + 1
         min_x = min(min_x, ax, bx)
@@ -32,6 +34,7 @@ g = dict()
 
 ans = 0
 
+greens = []
 
 previous = None
 start = [int(x) for x in f[0].strip().split(",")]
@@ -39,6 +42,7 @@ for i in range(len(f)):
     ax, ay = [int(x) for x in f[i].strip().split(",")]
     g[(ax, ay)] = 1
     if previous:
+        greens.append([(ax, ay), (previous[0], previous[1])])
         for greenyi in range(min(ay, previous[1]), max(previous[1], ay) + 1):
             for greenxi in range(min(ax, previous[0]), max(previous[0], ax) + 1):
                 if (greenxi, greenyi) in g:
@@ -49,6 +53,7 @@ for i in range(len(f)):
         ax,
         ay,
     )
+greens.append([(start[0], start[1]), (previous[0], previous[1])])
 for greenyi in range(min(start[1], previous[1]), max(previous[1], start[1]) + 1):
     for greenxi in range(min(start[0], previous[0]), max(previous[0], start[0]) + 1):
         if (greenxi, greenyi) in g:
@@ -78,6 +83,42 @@ def even_odd_test(point):
 
     return count % 2
 
+
+# NOT MY SOLUTION, taken from /u/Friiits to understand a better way
+
+sort = lambda l: [
+    ((min(a, c), min(b, d)), (max(a, c), max(b, d))) for (a, b), (c, d) in l
+]
+# print(sort(greens))
+# input()
+s_greens = sort(greens)
+
+ans = 0
+for (x, y), (u, v) in combos:
+    x1 = min(x, u)
+    y1 = min(y, v)
+    x2 = max(x, u)
+    y2 = max(y, v)
+    t = (x2 - x1 + 1) * (y2 - y1 + 1)
+    if t > ans:
+        for (p, q), (r, s) in s_greens:
+            gx1 = p
+            gx2 = r
+            gy1 = q
+            gy2 = s
+            # gx1 = min(p, r)
+            # gy1 = min(q, s)
+            # gx2 = max(p, r)
+            # gy2 = max(q, s)
+
+            if gx1 < x2 and gy1 < y2 and gx2 > x1 and gy2 > y1:
+                break
+        else:
+            ans = t
+print(ans)
+
+
+ans = 0
 
 for i in range(len(f)):
     ax, ay = [int(x) for x in f[i].strip().split(",")]
