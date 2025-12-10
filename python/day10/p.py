@@ -24,17 +24,17 @@ for line in f:
     target = list(target[1:-1])
     base_start = ["." for _ in target]
     # steps, curr_target
-    q = deque([(0, base_start)])
+    q = deque([(0, base_start, wirings)])
     found = False
     while q:
-        steps, curr_target = q.popleft()
-        for wire in wirings:
+        steps, curr_target, curr_wirings = q.popleft()
+        for i, wire in enumerate(curr_wirings):
             flipped = flip(curr_target, wire)
             if flipped == target:
                 ans += steps + 1
                 found = True
                 break
-            q.append((steps + 1, flipped))
+            q.append((steps + 1, flipped, curr_wirings[:i] + curr_wirings[i + 1 :]))
         if found:
             break
 
